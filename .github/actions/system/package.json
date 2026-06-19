@@ -1,0 +1,8 @@
+{
+    "name": "@github/system",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc && rollup -c ts.rollup.config.mjs"
+    }
+}

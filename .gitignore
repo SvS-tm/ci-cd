@@ -1,0 +1,4 @@
+node_modules
+dist
+!.github/actions/**/dist
+.github/actions/system/dist

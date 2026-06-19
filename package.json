@@ -1,0 +1,36 @@
+{
+  "name": "@svs-tm/ci-cd",
+  "version": "1.0.0",
+  "description": "CI/CD collection",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc && rollup -c ts.rollup.config.mjs"
+  },
+  "keywords": [],
+  "author": "svs-tm",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/exec": "^3.0.0",
+    "@actions/github": "^9.1.1",
+    "@actions/http-client": "^4.0.1",
+    "@octokit/types": "^16.0.0",
+    "http-status-codes": "^2.3.0",
+    "unzip-stream": "^0.3.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.9",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^24.13.2",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.62.0",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.2"
+  }
+}
