@@ -1,9 +1,0 @@
-{
-    "name": "@github/create-release",
-    "scripts": {
-        "build": "tsc && rollup -c ts.rollup.config.mjs"
-    },
-    "dependencies": {
-        "@github/system": "workspace:*"
-    }
-}

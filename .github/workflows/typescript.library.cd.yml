@@ -1,0 +1,36 @@
+on: 
+    workflow_call:
+        secrets:
+            NPM_REGISTRIES_CONFIG:
+                required: true
+jobs:
+  publish_release:
+    if: ${{  github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: download latest artifact
+      uses: svs-tm/ci-cd/.github/actions/download-latest-artifact@main
+      with:
+        token: ${{ github.token }}
+        owner: ${{ github.repository_owner }}
+        repository: ${{ github.event.repository.name }}
+        artifact_name: ${{ github.event.pull_request.id }}
+        path: ${{ github.workspace }}
+
+    - name: create release
+      id: create_release
+      uses: svs-tm/ci-cd/.github/actions/create-packages-release@main
+      with:
+        token: ${{ github.token }}
+        owner: ${{ github.repository_owner }}
+        repository: ${{ github.event.repository.name }}
+        path: ${{ github.workspace }}
+        target_commitish: ${{ github.event.pull_request.merge_commit_sha }}
+
+    - name: publish packages
+      uses: svs-tm/ci-cd/.github/actions/publish-packages@main
+      with:
+        paths: ${{ steps.create_release.outputs.packages }}
+      env:
+        NPM_REGISTRIES_CONFIG: ${{ secrets.NPM_REGISTRIES_CONFIG }}

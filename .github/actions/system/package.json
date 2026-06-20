@@ -1,5 +1,5 @@
 {
-    "name": "@github/system",
+    "name": "@svs-tm/github-actions.system",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
     "scripts": {

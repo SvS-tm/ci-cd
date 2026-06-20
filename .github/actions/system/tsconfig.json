@@ -20,7 +20,7 @@
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "skipLibCheck": true,
-        "exactOptionalPropertyTypes": true,
+        "exactOptionalPropertyTypes": false,
         "useDefineForClassFields": true,
         "resolveJsonModule": true,
         "types": [

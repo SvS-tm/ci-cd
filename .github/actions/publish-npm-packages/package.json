@@ -1,0 +1,9 @@
+{
+    "name": "@github/github-actions.publish-npm-packages",
+    "scripts": {
+        "build": "tsc && rollup -c ts.rollup.config.mjs"
+    },
+    "dependencies": {
+        "@svs-tm/github-actions.system": "workspace:*"
+    }
+}
