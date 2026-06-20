@@ -12,6 +12,13 @@ const inputs = new Proxy
                 return undefined;
 
             return getInput(key);
+        },
+        has(_target, key) 
+        {
+            if (typeof key === "symbol")
+                return false;
+
+            return true;
         }
     }
 );

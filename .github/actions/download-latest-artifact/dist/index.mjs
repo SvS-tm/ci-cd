@@ -61298,6 +61298,11 @@ const inputs = new Proxy({}, {
         if (typeof key === 'symbol')
             return undefined;
         return getInput(key);
+    },
+    has(_target, key) {
+        if (typeof key === "symbol")
+            return false;
+        return true;
     }
 });
 function getInputs(type) {

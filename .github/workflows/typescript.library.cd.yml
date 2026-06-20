@@ -12,9 +12,9 @@ jobs:
     - name: download latest artifact
       uses: svs-tm/ci-cd/.github/actions/download-latest-artifact@main
       with:
-        token: ${{ github.token }}
         owner: ${{ github.repository_owner }}
         repository: ${{ github.event.repository.name }}
+        token: ${{ github.token }}
         artifact_name: ${{ github.event.pull_request.id }}
         path: ${{ github.workspace }}
 
