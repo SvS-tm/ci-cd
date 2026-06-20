@@ -25,6 +25,7 @@ jobs:
         pnpm -r test
 
     - name: pack
+      if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'release') }}
       run: |
         pnpm -r pack
   
