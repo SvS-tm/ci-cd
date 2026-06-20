@@ -18,7 +18,7 @@ export async function publishToRegistry(assetPath: string, config: RegistryConfi
             npmrcPath,
             [
                 `registry=${config.registry}`,
-                getNpmAuthLine(config.registry, config.authTokenSource),
+                getNpmAuthLine(config.registry, config.token),
                 "always-auth=true",
                 "",
             ]

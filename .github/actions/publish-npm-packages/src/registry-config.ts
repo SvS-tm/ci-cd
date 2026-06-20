@@ -4,7 +4,7 @@ export const RegistryConfigSchema = z.object
 (
     {
         "registry": z.string(),
-        "authTokenSource": z.string()
+        "token": z.string()
     }
 );
 

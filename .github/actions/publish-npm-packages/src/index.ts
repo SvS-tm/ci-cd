@@ -3,20 +3,25 @@ import { InputsSchema } from "./inputs";
 import { publishToRegistry } from "./publish-to-registry";
 import { info } from "console";
 import { RegistriesConfigSchema } from "./registries-config";
+import { setSecret } from "@actions/core";
 
 await run
 (
     InputsSchema,
     async (inputs) =>
     {
-        const registries = RegistriesConfigSchema.parse(process.env.NPM_REGISTRIES_CONFIG);
+        const registriesConfig = RegistriesConfigSchema.parse(process.env.NPM_REGISTRIES_CONFIG);
 
         for (const path of inputs.paths)
         {
-            for (const registry of registries)
-                await publishToRegistry(path, registry);
+            for (const config of registriesConfig)
+            {
+                setSecret(config.token);
+                
+                await publishToRegistry(path, config);
+            }
         }
 
-        info(`Success, published ${inputs.paths.length} package(s) to ${registries.length} registry/ies`);
+        info(`Success, published ${inputs.paths.length} package(s) to ${registriesConfig.length} registry/ies`);
     }
 );

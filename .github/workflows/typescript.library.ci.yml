@@ -28,7 +28,7 @@ jobs:
         pnpm -r pack
   
     - name: publish artifact
-      if: ${{ startsWith(github.base_ref, 'release') }}
+      if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'release') }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.pull_request.id }}
@@ -37,4 +37,4 @@ jobs:
             ${{ github.workspace }}/**/coverage/**
             ${{ github.workspace }}/**/test-results/**
         overwrite: true
-        retention-days: 1
+        retention-days: 7

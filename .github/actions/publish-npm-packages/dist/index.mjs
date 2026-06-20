@@ -26,7 +26,7 @@ import { info as info$2 } from 'console';
  * Sanitizes an input into a string so it can be passed into issueCommand safely
  * @param input input to sanitize into a string
  */
-function toCommandValue(input) {
+function toCommandValue$1(input) {
     if (input === null || input === undefined) {
         return '';
     }
@@ -88,12 +88,12 @@ function toCommandProperties(annotationProperties) {
  * This is an internal utility function that powers the public API functions
  * such as setSecret, warning, error, and exportVariable.
  */
-function issueCommand(command, properties, message) {
-    const cmd = new Command(command, properties, message);
+function issueCommand$1(command, properties, message) {
+    const cmd = new Command$1(command, properties, message);
     process.stdout.write(cmd.toString() + os.EOL);
 }
-const CMD_STRING = '::';
-class Command {
+const CMD_STRING$1 = '::';
+let Command$1 = class Command {
     constructor(command, properties, message) {
         if (!command) {
             command = 'missing.command';
@@ -103,7 +103,7 @@ class Command {
         this.message = message;
     }
     toString() {
-        let cmdStr = CMD_STRING + this.command;
+        let cmdStr = CMD_STRING$1 + this.command;
         if (this.properties && Object.keys(this.properties).length > 0) {
             cmdStr += ' ';
             let first = true;
@@ -117,23 +117,23 @@ class Command {
                         else {
                             cmdStr += ',';
                         }
-                        cmdStr += `${key}=${escapeProperty(val)}`;
+                        cmdStr += `${key}=${escapeProperty$1(val)}`;
                     }
                 }
             }
         }
-        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
+        cmdStr += `${CMD_STRING$1}${escapeData$1(this.message)}`;
         return cmdStr;
     }
-}
-function escapeData(s) {
-    return toCommandValue(s)
+};
+function escapeData$1(s) {
+    return toCommandValue$1(s)
         .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
         .replace(/\n/g, '%0A');
 }
-function escapeProperty(s) {
-    return toCommandValue(s)
+function escapeProperty$1(s) {
+    return toCommandValue$1(s)
         .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
         .replace(/\n/g, '%0A')
@@ -152,13 +152,13 @@ function issueFileCommand(command, message) {
     if (!fs.existsSync(filePath)) {
         throw new Error(`Missing file at path: ${filePath}`);
     }
-    fs.appendFileSync(filePath, `${toCommandValue(message)}${os.EOL}`, {
+    fs.appendFileSync(filePath, `${toCommandValue$1(message)}${os.EOL}`, {
         encoding: 'utf8'
     });
 }
 function prepareKeyValueMessage(key, value) {
     const delimiter = `ghadelimiter_${crypto.randomUUID()}`;
-    const convertedValue = toCommandValue(value);
+    const convertedValue = toCommandValue$1(value);
     // These should realistically never happen, but just in case someone finds a
     // way to exploit uuid generation let's not allow keys or values that contain
     // the delimiter.
@@ -28200,7 +28200,7 @@ function setOutput(name, value) {
         return issueFileCommand('OUTPUT', prepareKeyValueMessage(name, value));
     }
     process.stdout.write(os.EOL);
-    issueCommand('set-output', { name }, toCommandValue(value));
+    issueCommand$1('set-output', { name }, toCommandValue$1(value));
 }
 //-----------------------------------------------------------------------
 // Results
@@ -28220,7 +28220,7 @@ function setFailed(message) {
  * @param properties optional properties to add to the annotation.
  */
 function error$O(message, properties = {}) {
-    issueCommand('error', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+    issueCommand$1('error', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 /**
  * Writes info to log with console.log.
@@ -58669,6 +58669,108 @@ const InputsSchema = z.object({
         .min(1))
 });
 
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Sanitizes an input into a string so it can be passed into issueCommand safely
+ * @param input input to sanitize into a string
+ */
+function toCommandValue(input) {
+    if (input === null || input === undefined) {
+        return '';
+    }
+    else if (typeof input === 'string' || input instanceof String) {
+        return input;
+    }
+    return JSON.stringify(input);
+}
+
+/**
+ * Issues a command to the GitHub Actions runner
+ *
+ * @param command - The command name to issue
+ * @param properties - Additional properties for the command (key-value pairs)
+ * @param message - The message to include with the command
+ * @remarks
+ * This function outputs a specially formatted string to stdout that the Actions
+ * runner interprets as a command. These commands can control workflow behavior,
+ * set outputs, create annotations, mask values, and more.
+ *
+ * Command Format:
+ *   ::name key=value,key=value::message
+ *
+ * @example
+ * ```typescript
+ * // Issue a warning annotation
+ * issueCommand('warning', {}, 'This is a warning message');
+ * // Output: ::warning::This is a warning message
+ *
+ * // Set an environment variable
+ * issueCommand('set-env', { name: 'MY_VAR' }, 'some value');
+ * // Output: ::set-env name=MY_VAR::some value
+ *
+ * // Add a secret mask
+ * issueCommand('add-mask', {}, 'secretValue123');
+ * // Output: ::add-mask::secretValue123
+ * ```
+ *
+ * @internal
+ * This is an internal utility function that powers the public API functions
+ * such as setSecret, warning, error, and exportVariable.
+ */
+function issueCommand(command, properties, message) {
+    const cmd = new Command(command, properties, message);
+    process.stdout.write(cmd.toString() + os.EOL);
+}
+const CMD_STRING = '::';
+class Command {
+    constructor(command, properties, message) {
+        if (!command) {
+            command = 'missing.command';
+        }
+        this.command = command;
+        this.properties = properties;
+        this.message = message;
+    }
+    toString() {
+        let cmdStr = CMD_STRING + this.command;
+        if (this.properties && Object.keys(this.properties).length > 0) {
+            cmdStr += ' ';
+            let first = true;
+            for (const key in this.properties) {
+                if (this.properties.hasOwnProperty(key)) {
+                    const val = this.properties[key];
+                    if (val) {
+                        if (first) {
+                            first = false;
+                        }
+                        else {
+                            cmdStr += ',';
+                        }
+                        cmdStr += `${key}=${escapeProperty(val)}`;
+                    }
+                }
+            }
+        }
+        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
+        return cmdStr;
+    }
+}
+function escapeData(s) {
+    return toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A');
+}
+function escapeProperty(s) {
+    return toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A')
+        .replace(/:/g, '%3A')
+        .replace(/,/g, '%2C');
+}
+
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 var tunnel$1 = {};
@@ -87582,6 +87684,38 @@ var ExitCode;
     ExitCode[ExitCode["Failure"] = 1] = "Failure";
 })(ExitCode || (ExitCode = {}));
 /**
+ * Registers a secret which will get masked from logs
+ *
+ * @param secret - Value of the secret to be masked
+ * @remarks
+ * This function instructs the Actions runner to mask the specified value in any
+ * logs produced during the workflow run. Once registered, the secret value will
+ * be replaced with asterisks (***) whenever it appears in console output, logs,
+ * or error messages.
+ *
+ * This is useful for protecting sensitive information such as:
+ * - API keys
+ * - Access tokens
+ * - Authentication credentials
+ * - URL parameters containing signatures (SAS tokens)
+ *
+ * Note that masking only affects future logs; any previous appearances of the
+ * secret in logs before calling this function will remain unmasked.
+ *
+ * @example
+ * ```typescript
+ * // Register an API token as a secret
+ * const apiToken = "abc123xyz456";
+ * setSecret(apiToken);
+ *
+ * // Now any logs containing this value will show *** instead
+ * console.log(`Using token: ${apiToken}`); // Outputs: "Using token: ***"
+ * ```
+ */
+function setSecret(secret) {
+    issueCommand('add-mask', {}, secret);
+}
+/**
  * Writes info to log with console.log.
  * @param message info message
  */
@@ -87603,7 +87737,7 @@ async function publishToRegistry(assetPath, config) {
     try {
         await writeFile$2(npmrcPath, [
             `registry=${config.registry}`,
-            getNpmAuthLine(config.registry, config.authTokenSource),
+            getNpmAuthLine(config.registry, config.token),
             "always-auth=true",
             "",
         ]
@@ -87625,18 +87759,20 @@ async function publishToRegistry(assetPath, config) {
 
 const RegistryConfigSchema = object({
     "registry": string$1(),
-    "authTokenSource": string$1()
+    "token": string$1()
 });
 
 const RegistriesConfigSchema = ZodHelpers.json(array(RegistryConfigSchema)
     .min(1));
 
 await run(InputsSchema, async (inputs) => {
-    const registries = RegistriesConfigSchema.parse(process.env.NPM_REGISTRIES_CONFIG);
+    const registriesConfig = RegistriesConfigSchema.parse(process.env.NPM_REGISTRIES_CONFIG);
     for (const path of inputs.paths) {
-        for (const registry of registries)
-            await publishToRegistry(path, registry);
+        for (const config of registriesConfig) {
+            setSecret(config.token);
+            await publishToRegistry(path, config);
+        }
     }
-    info$2(`Success, published ${inputs.paths.length} package(s) to ${registries.length} registry/ies`);
+    info$2(`Success, published ${inputs.paths.length} package(s) to ${registriesConfig.length} registry/ies`);
 });
 //# sourceMappingURL=index.mjs.map
