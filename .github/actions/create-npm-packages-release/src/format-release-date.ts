@@ -9,5 +9,5 @@ export function formatReleaseDate(date = new Date())
     const hour = pad(date.getUTCHours());
     const minute = pad(date.getUTCMinutes());
 
-    return `${year}-${month}-${day} ${hour}:${minute} UTC`;
+    return `${year}.${month}.${day}-${hour}_${minute}`;
 }
