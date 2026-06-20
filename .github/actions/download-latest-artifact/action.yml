@@ -1,0 +1,23 @@
+name: Download Latest Artifact
+description: Downloads and extracts the latest non-expired artifact from a GitHub Actions run by name.
+
+inputs:
+  owner:
+    description: Repository owner (org or user).
+    required: true
+  repository:
+    description: Repository name.
+    required: true
+  token:
+    description: GitHub token with permissions to read actions artifacts.
+    required: true
+  artifact_name:
+    description: Name of the artifact to download.
+    required: true
+  path:
+    description: Directory to extract the artifact into. Defaults to GITHUB_WORKSPACE.
+    required: false
+
+runs:
+  using: node24
+  main: dist/index.mjs

@@ -1,0 +1,11 @@
+name: Publish npm Packages
+description: Publishes npm package tarballs to one or more registries defined in NPM_REGISTRIES_CONFIG.
+
+inputs:
+  paths:
+    description: JSON-stringified array of paths to .tgz package files to publish (e.g. '["./dist/pkg.tgz"]').
+    required: true
+
+runs:
+  using: node24
+  main: dist/index.mjs

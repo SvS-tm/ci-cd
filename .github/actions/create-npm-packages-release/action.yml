@@ -1,0 +1,42 @@
+name: Create npm Packages Release
+description: Creates a GitHub release with npm package tarballs as assets, tagging each package individually.
+
+inputs:
+  owner:
+    description: Repository owner (org or user).
+    required: true
+  repository:
+    description: Repository name.
+    required: true
+  token:
+    description: GitHub token with permissions to create releases and upload assets.
+    required: true
+  target_commitish:
+    description: Commit SHA, branch, or tag to target for the release.
+    required: true
+  path:
+    description: Directory to scan recursively for .tgz package files.
+    required: true
+  draft:
+    description: Whether to create the release as a draft.
+    required: false
+  prerelease:
+    description: Whether to mark the release as a pre-release.
+    required: false
+  discussion_category_name:
+    description: Category name for the release discussion thread.
+    required: false
+
+outputs:
+  id:
+    description: ID of the created GitHub release.
+  url:
+    description: URL of the created GitHub release.
+  upload_url:
+    description: Asset upload URL for the created release.
+  packages:
+    description: JSON array of paths to the package tarballs that were uploaded.
+
+runs:
+  using: node24
+  main: dist/index.mjs
