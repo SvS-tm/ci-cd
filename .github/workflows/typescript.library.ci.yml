@@ -38,5 +38,6 @@ jobs:
             ${{ github.workspace }}/**/*.tgz
             ${{ github.workspace }}/**/coverage/**
             ${{ github.workspace }}/**/test-results/**
+            !${{ github.workspace }}/**/node_modules/**
         overwrite: true
         retention-days: 7
