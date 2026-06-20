@@ -43478,6 +43478,16 @@ var ZodHelpers;
             .pipe(type);
     }
     ZodHelpers.json = json;
+    function githubInput() {
+        return (value) => {
+            if (typeof value === "string") {
+                if (!value.length)
+                    return undefined;
+            }
+            return value;
+        };
+    }
+    ZodHelpers.githubInput = githubInput;
 })(ZodHelpers || (ZodHelpers = {}));
 
 var _a$1;

@@ -1,6 +1,6 @@
 import { info } from "@actions/core";
 import { getOctokit } from "@actions/github";
-import { isSuccessStatusCode, run, serializeObject } from "@svs-tm/github-actions.system";
+import { isSuccessStatusCode, run, serializeObject, ZodHelpers } from "@svs-tm/github-actions.system";
 import { Readable } from "stream";
 import { Extract } from "unzip-stream";
 import z from "zod";
@@ -14,7 +14,7 @@ await run
             repository: z.string(),
             token: z.string(),
             artifact_name: z.string(),
-            path: z.string().optional()
+            path: z.string().optional().transform(ZodHelpers.githubInput())
         }
     ),
     async (inputs) =>

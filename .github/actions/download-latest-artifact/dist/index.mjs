@@ -76541,6 +76541,16 @@ var ZodHelpers;
             .pipe(type);
     }
     ZodHelpers.json = json;
+    function githubInput() {
+        return (value) => {
+            if (typeof value === "string") {
+                if (!value.length)
+                    return undefined;
+            }
+            return value;
+        };
+    }
+    ZodHelpers.githubInput = githubInput;
 })(ZodHelpers || (ZodHelpers = {}));
 
 var unzip = {};
@@ -94111,7 +94121,7 @@ await run(z.object({
     repository: z.string(),
     token: z.string(),
     artifact_name: z.string(),
-    path: z.string().optional()
+    path: z.string().optional().transform(ZodHelpers.githubInput())
 }), async (inputs) => {
     const octokit = getOctokit(inputs.token);
     const response = await octokit.paginate("GET /repos/{owner}/{repo}/actions/artifacts", {

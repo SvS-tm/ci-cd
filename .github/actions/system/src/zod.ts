@@ -30,4 +30,18 @@ export namespace ZodHelpers
             )
             .pipe(type);
     }
+
+    export function githubInput<T_Value>()
+    {
+        return (value: T_Value) =>
+        {
+            if (typeof value === "string")
+            {
+                if (!value.length)
+                    return undefined;
+            }
+
+            return value;   
+        };
+    }
 }

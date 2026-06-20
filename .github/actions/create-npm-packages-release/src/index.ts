@@ -1,6 +1,6 @@
 import { info, warning } from "@actions/core";
 import { getOctokit } from "@actions/github";
-import { isSuccessStatusCode, run, serializeObject, findTgzFiles } from "@svs-tm/github-actions.system";
+import { isSuccessStatusCode, run, serializeObject, findTgzFiles, ZodHelpers } from "@svs-tm/github-actions.system";
 import { readFile } from "fs/promises";
 import path from "path";
 import z from "zod";
@@ -19,9 +19,9 @@ await run
             repository: z.coerce.string(),
             token: z.coerce.string(),
             target_commitish: z.coerce.string(),
-            draft: z.coerce.boolean().optional(),
-            prerelease: z.coerce.boolean().optional(),
-            discussion_category_name: z.coerce.string().optional(),
+            draft: z.coerce.boolean().optional().transform(ZodHelpers.githubInput()),
+            prerelease: z.coerce.boolean().optional().transform(ZodHelpers.githubInput()),
+            discussion_category_name: z.coerce.string().optional().transform(ZodHelpers.githubInput()),
             path: z.string()
         }
     ),

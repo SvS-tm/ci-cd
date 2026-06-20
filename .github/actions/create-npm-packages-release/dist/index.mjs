@@ -76680,6 +76680,16 @@ var ZodHelpers;
             .pipe(type);
     }
     ZodHelpers.json = json;
+    function githubInput() {
+        return (value) => {
+            if (typeof value === "string") {
+                if (!value.length)
+                    return undefined;
+            }
+            return value;
+        };
+    }
+    ZodHelpers.githubInput = githubInput;
 })(ZodHelpers || (ZodHelpers = {}));
 
 function* findTgzFiles(directory) {
@@ -91954,9 +91964,9 @@ await run(z$1.object({
     repository: z$1.coerce.string(),
     token: z$1.coerce.string(),
     target_commitish: z$1.coerce.string(),
-    draft: z$1.coerce.boolean().optional(),
-    prerelease: z$1.coerce.boolean().optional(),
-    discussion_category_name: z$1.coerce.string().optional(),
+    draft: z$1.coerce.boolean().optional().transform(ZodHelpers.githubInput()),
+    prerelease: z$1.coerce.boolean().optional().transform(ZodHelpers.githubInput()),
+    discussion_category_name: z$1.coerce.string().optional().transform(ZodHelpers.githubInput()),
     path: z$1.string()
 }), async (inputs) => {
     const octokit = getOctokit(inputs.token);
