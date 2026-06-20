@@ -9,6 +9,7 @@ jobs:
 
     - name: setup
       run: |
+        corepack enable
         corepack prepare --activate
 
     - name: restore
