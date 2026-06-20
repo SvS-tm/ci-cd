@@ -20,7 +20,7 @@ jobs:
 
     - name: create release
       id: create_release
-      uses: svs-tm/ci-cd/.github/actions/create-packages-release@main
+      uses: svs-tm/ci-cd/.github/actions/create-npm-packages-release@main
       with:
         token: ${{ github.token }}
         owner: ${{ github.repository_owner }}
@@ -29,7 +29,7 @@ jobs:
         target_commitish: ${{ github.event.pull_request.merge_commit_sha }}
 
     - name: publish packages
-      uses: svs-tm/ci-cd/.github/actions/publish-packages@main
+      uses: svs-tm/ci-cd/.github/actions/publish-npm-packages@main
       with:
         paths: ${{ steps.create_release.outputs.packages }}
       env:
