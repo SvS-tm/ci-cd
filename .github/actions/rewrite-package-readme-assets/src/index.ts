@@ -6,11 +6,12 @@ import z from "zod";
 
 const excludedDirectories = new Set([".git", "node_modules", "dist", "coverage"]);
 const imageExtensions = "svg|gif|png|jpg|jpeg|webp|avif";
-const documentTarget = `(LICENSE(?:\\.md|\\.txt)?|[^"'#)]+\\.(?:md|markdown))(?:#[^"')]+)?`;
+const documentTarget = `(?:LICENSE(?:\\.md|\\.txt)?|[^"'#)]+\\.(?:md|markdown))(?:#[^"')]+)?`;
+const relativePathPrefix = `(?:\\.\\.?\\/)`;
 const htmlRelativeAssetPattern = new RegExp(`(src=["'])\\.\\/([^"']+\\.(${imageExtensions}))(["'])`, "gi");
 const markdownRelativeAssetPattern = new RegExp(`(!\\[[^\\]]*\\]\\()\\.\\/([^\\)]+\\.(${imageExtensions}))(\\))`, "gi");
-const htmlRelativeDocumentLinkPattern = new RegExp(`(href=["'])\\.\\/(${documentTarget})(["'])`, "gi");
-const markdownRelativeDocumentLinkPattern = new RegExp(`(^|[^!])(\\[[^\\]]+\\]\\()\\.\\/(${documentTarget})(\\))`, "gim");
+const htmlRelativeDocumentLinkPattern = new RegExp(`(href=["'])(${relativePathPrefix}${documentTarget})(["'])`, "gi");
+const markdownRelativeDocumentLinkPattern = new RegExp(`(^|[^!])(\\[[^\\]]+\\]\\()(${relativePathPrefix}${documentTarget})(\\))`, "gim");
 
 await run
 (
@@ -46,9 +47,8 @@ function rewritePackageReadme(packageJsonPath: string, commit: string)
 
     const readme = readFileSync(readmePath, "utf-8");
     const rawBaseUrl = getRawBaseUrl(packageJson, commit);
-    const blobBaseUrl = getBlobBaseUrl(packageJson, commit);
 
-    if (!rawBaseUrl || !blobBaseUrl)
+    if (!rawBaseUrl)
         return;
 
     const nextReadme = readme
@@ -67,14 +67,14 @@ function rewritePackageReadme(packageJsonPath: string, commit: string)
         .replace
         (
             htmlRelativeDocumentLinkPattern,
-            (_match, prefix: string, target: string, _document: string, suffix: string) =>
-                replaceUrl(packageJson, `./${target}`, `${blobBaseUrl}/${target}`, prefix, suffix)
+            (_match, prefix: string, target: string, suffix: string) =>
+                replaceDocumentUrl(packageJson, commit, target, prefix, suffix)
         )
         .replace
         (
             markdownRelativeDocumentLinkPattern,
-            (_match, leading: string, prefix: string, target: string, _document: string, suffix: string) =>
-                `${leading}${replaceUrl(packageJson, `./${target}`, `${blobBaseUrl}/${target}`, prefix, suffix)}`
+            (_match, leading: string, prefix: string, target: string, suffix: string) =>
+                `${leading}${replaceDocumentUrl(packageJson, commit, target, prefix, suffix)}`
         );
 
     if (nextReadme === readme)
@@ -89,6 +89,16 @@ function replaceUrl(packageJson: PackageJson, from: string, to: string, prefix: 
     info(`Rewriting ${packageJson.name}: ${from} -> ${to}`);
 
     return `${prefix}${to}${suffix}`;
+}
+
+function replaceDocumentUrl(packageJson: PackageJson, commit: string, target: string, prefix: string, suffix: string)
+{
+    const to = getBlobUrl(packageJson, commit, target);
+
+    if (!to)
+        return `${prefix}${target}${suffix}`;
+
+    return replaceUrl(packageJson, target, to, prefix, suffix);
 }
 
 function* findPackageJsonFiles(directory: string): Generator<string>
@@ -145,22 +155,40 @@ function getRawBaseUrl(packageJson: PackageJson, commit: string)
     return `https://raw.githubusercontent.com/${repository.owner}/${repository.name}/${commit}${basePath}`;
 }
 
-function getBlobBaseUrl(packageJson: PackageJson, commit: string)
+function getBlobUrl(packageJson: PackageJson, commit: string, target: string)
 {
     const repository = getRepository(packageJson);
 
     if (!repository)
         return undefined;
 
+    const [targetPath, anchor] = splitAnchor(target);
     const directory = typeof packageJson.repository === "object"
         ? packageJson.repository.directory
         : undefined;
-
     const basePath = directory
-        ? `/${trimSlashes(directory)}`
+        ? trimSlashes(directory)
         : "";
+    const normalizedPath = path.posix.normalize(`${basePath}/${targetPath}`);
 
-    return `https://github.com/${repository.owner}/${repository.name}/blob/${commit}${basePath}`;
+    if (normalizedPath.startsWith("../"))
+    {
+        info(`Skipping ${packageJson.name}: relative document link '${target}' escapes repository root.`);
+
+        return undefined;
+    }
+
+    return `https://github.com/${repository.owner}/${repository.name}/blob/${commit}/${normalizedPath}${anchor}`;
+}
+
+function splitAnchor(target: string): [string, string]
+{
+    const index = target.indexOf("#");
+
+    if (index < 0)
+        return [target, ""];
+
+    return [target.slice(0, index), target.slice(index)];
 }
 
 function getRepository(packageJson: PackageJson)
