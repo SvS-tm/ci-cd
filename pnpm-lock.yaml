@@ -85,6 +85,12 @@ importers:
         specifier: workspace:*
         version: link:../system
 
+  .github/actions/rewrite-package-readme-assets:
+    dependencies:
+      '@svs-tm/github-actions.system':
+        specifier: workspace:*
+        version: link:../system
+
   .github/actions/system: {}
 
 packages:

@@ -24,6 +24,13 @@ jobs:
       run: |
         pnpm -r test
 
+    - name: rewrite package readme assets
+      if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'release') }}
+      uses: svs-tm/ci-cd/.github/actions/rewrite-package-readme-assets@main
+      with:
+        path: ${{ github.workspace }}
+        commit: ${{ github.sha }}
+
     - name: pack
       if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'release') }}
       run: |

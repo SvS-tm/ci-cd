@@ -1,0 +1,15 @@
+name: Rewrite Package README Assets
+description: Rewrites relative package README image URLs to commit-pinned raw GitHub URLs.
+
+inputs:
+  path:
+    description: Directory to scan recursively for package.json files.
+    required: false
+    default: .
+  commit:
+    description: Commit SHA to use in raw GitHub URLs.
+    required: true
+
+runs:
+  using: node24
+  main: dist/index.mjs
