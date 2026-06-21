@@ -87747,6 +87747,12 @@ function getNpmAuthLine(registry, token) {
 }
 
 async function publishToRegistry(assetPath, config) {
+    const args = getPublishArgs(assetPath, config);
+    if (config.mode === "TrustedPublishing") {
+        info(`Publishing '${assetPath}' to '${config.registry}' using trusted publishing`);
+        await exec("npm", args);
+        return;
+    }
     const tempDir = await mkdtemp(join(tmpdir(), "npm-publish-"));
     const npmrcPath = join(tempDir, ".npmrc");
     try {
@@ -87758,24 +87764,43 @@ async function publishToRegistry(assetPath, config) {
         ]
             .join("\n"), { encoding: "utf-8" });
         info(`Publishing '${assetPath}' to '${config.registry}'`);
-        await exec("npm", [
-            "publish",
-            assetPath,
-            "--registry",
-            config.registry,
-            "--userconfig",
-            npmrcPath,
-        ]);
+        await exec("npm", [...args, "--userconfig", npmrcPath]);
     }
     finally {
         await rm$2(tempDir, { recursive: true, force: true });
     }
 }
+function getPublishArgs(assetPath, config) {
+    const args = [
+        "publish",
+        assetPath,
+        "--registry",
+        config.registry
+    ];
+    if (config.access)
+        args.push("--access", config.access);
+    if (config.tag)
+        args.push("--tag", config.tag);
+    if (typeof config.provenance === "boolean")
+        args.push(`--provenance=${config.provenance}`);
+    return args;
+}
 
-const RegistryConfigSchema = object({
+const PublishOptionsSchema = object({
     "registry": string$1(),
-    "token": string$1()
+    "access": _enum(["public", "restricted"]).optional(),
+    "tag": string$1().optional(),
+    "provenance": boolean$1().optional()
 });
+const RegistryConfigSchema = discriminatedUnion("mode", [
+    PublishOptionsSchema.extend({
+        "mode": literal("AuthToken"),
+        "token": string$1()
+    }),
+    PublishOptionsSchema.extend({
+        "mode": literal("TrustedPublishing")
+    })
+]);
 
 const RegistriesConfigSchema = ZodHelpers.json(array(RegistryConfigSchema)
     .min(1));
@@ -87784,7 +87809,8 @@ await run(InputsSchema, async (inputs) => {
     const registriesConfig = RegistriesConfigSchema.parse(process.env.NPM_REGISTRIES_CONFIG);
     for (const path of inputs.paths) {
         for (const config of registriesConfig) {
-            setSecret(config.token);
+            if (config.mode === "AuthToken")
+                setSecret(config.token);
             await publishToRegistry(path, config);
         }
     }

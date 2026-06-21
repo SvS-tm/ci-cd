@@ -16,7 +16,8 @@ await run
         {
             for (const config of registriesConfig)
             {
-                setSecret(config.token);
+                if (config.mode === "AuthToken")
+                    setSecret(config.token);
                 
                 await publishToRegistry(path, config);
             }
