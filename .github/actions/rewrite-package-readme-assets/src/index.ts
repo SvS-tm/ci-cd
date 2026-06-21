@@ -6,8 +6,11 @@ import z from "zod";
 
 const excludedDirectories = new Set([".git", "node_modules", "dist", "coverage"]);
 const imageExtensions = "svg|gif|png|jpg|jpeg|webp|avif";
+const documentTarget = `(LICENSE(?:\\.md|\\.txt)?|[^"'#)]+\\.(?:md|markdown))(?:#[^"')]+)?`;
 const htmlRelativeAssetPattern = new RegExp(`(src=["'])\\.\\/([^"']+\\.(${imageExtensions}))(["'])`, "gi");
 const markdownRelativeAssetPattern = new RegExp(`(!\\[[^\\]]*\\]\\()\\.\\/([^\\)]+\\.(${imageExtensions}))(\\))`, "gi");
+const htmlRelativeDocumentLinkPattern = new RegExp(`(href=["'])\\.\\/(${documentTarget})(["'])`, "gi");
+const markdownRelativeDocumentLinkPattern = new RegExp(`(^|[^!])(\\[[^\\]]+\\]\\()\\.\\/(${documentTarget})(\\))`, "gim");
 
 await run
 (
@@ -43,19 +46,49 @@ function rewritePackageReadme(packageJsonPath: string, commit: string)
 
     const readme = readFileSync(readmePath, "utf-8");
     const rawBaseUrl = getRawBaseUrl(packageJson, commit);
+    const blobBaseUrl = getBlobBaseUrl(packageJson, commit);
 
-    if (!rawBaseUrl)
+    if (!rawBaseUrl || !blobBaseUrl)
         return;
 
     const nextReadme = readme
-        .replace(htmlRelativeAssetPattern, `$1${rawBaseUrl}/$2$4`)
-        .replace(markdownRelativeAssetPattern, `$1${rawBaseUrl}/$2$4`);
+        .replace
+        (
+            htmlRelativeAssetPattern,
+            (_match, prefix: string, target: string, _extension: string, suffix: string) =>
+                replaceUrl(packageJson, `./${target}`, `${rawBaseUrl}/${target}`, prefix, suffix)
+        )
+        .replace
+        (
+            markdownRelativeAssetPattern,
+            (_match, prefix: string, target: string, _extension: string, suffix: string) =>
+                replaceUrl(packageJson, `./${target}`, `${rawBaseUrl}/${target}`, prefix, suffix)
+        )
+        .replace
+        (
+            htmlRelativeDocumentLinkPattern,
+            (_match, prefix: string, target: string, _document: string, suffix: string) =>
+                replaceUrl(packageJson, `./${target}`, `${blobBaseUrl}/${target}`, prefix, suffix)
+        )
+        .replace
+        (
+            markdownRelativeDocumentLinkPattern,
+            (_match, leading: string, prefix: string, target: string, _document: string, suffix: string) =>
+                `${leading}${replaceUrl(packageJson, `./${target}`, `${blobBaseUrl}/${target}`, prefix, suffix)}`
+        );
 
     if (nextReadme === readme)
         return;
 
     writeFileSync(readmePath, nextReadme, "utf-8");
-    info(`Rewrote README image assets for ${packageJson.name} to ${rawBaseUrl}`);
+    info(`Rewrote README image assets and document links for ${packageJson.name}`);
+}
+
+function replaceUrl(packageJson: PackageJson, from: string, to: string, prefix: string, suffix: string)
+{
+    info(`Rewriting ${packageJson.name}: ${from} -> ${to}`);
+
+    return `${prefix}${to}${suffix}`;
 }
 
 function* findPackageJsonFiles(directory: string): Generator<string>
@@ -110,6 +143,24 @@ function getRawBaseUrl(packageJson: PackageJson, commit: string)
         : "";
 
     return `https://raw.githubusercontent.com/${repository.owner}/${repository.name}/${commit}${basePath}`;
+}
+
+function getBlobBaseUrl(packageJson: PackageJson, commit: string)
+{
+    const repository = getRepository(packageJson);
+
+    if (!repository)
+        return undefined;
+
+    const directory = typeof packageJson.repository === "object"
+        ? packageJson.repository.directory
+        : undefined;
+
+    const basePath = directory
+        ? `/${trimSlashes(directory)}`
+        : "";
+
+    return `https://github.com/${repository.owner}/${repository.name}/blob/${commit}${basePath}`;
 }
 
 function getRepository(packageJson: PackageJson)

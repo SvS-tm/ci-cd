@@ -86789,8 +86789,11 @@ var z = /*#__PURE__*/Object.freeze({
 
 const excludedDirectories = new Set([".git", "node_modules", "dist", "coverage"]);
 const imageExtensions = "svg|gif|png|jpg|jpeg|webp|avif";
+const documentTarget = `(LICENSE(?:\\.md|\\.txt)?|[^"'#)]+\\.(?:md|markdown))(?:#[^"')]+)?`;
 const htmlRelativeAssetPattern = new RegExp(`(src=["'])\\.\\/([^"']+\\.(${imageExtensions}))(["'])`, "gi");
 const markdownRelativeAssetPattern = new RegExp(`(!\\[[^\\]]*\\]\\()\\.\\/([^\\)]+\\.(${imageExtensions}))(\\))`, "gi");
+const htmlRelativeDocumentLinkPattern = new RegExp(`(href=["'])\\.\\/(${documentTarget})(["'])`, "gi");
+const markdownRelativeDocumentLinkPattern = new RegExp(`(^|[^!])(\\[[^\\]]+\\]\\()\\.\\/(${documentTarget})(\\))`, "gim");
 await run(z.object({
     path: z.string().optional().transform(ZodHelpers.githubInput()),
     commit: z.string().min(1)
@@ -86811,15 +86814,22 @@ function rewritePackageReadme(packageJsonPath, commit) {
         return;
     const readme = readFileSync(readmePath, "utf-8");
     const rawBaseUrl = getRawBaseUrl(packageJson, commit);
-    if (!rawBaseUrl)
+    const blobBaseUrl = getBlobBaseUrl(packageJson, commit);
+    if (!rawBaseUrl || !blobBaseUrl)
         return;
     const nextReadme = readme
-        .replace(htmlRelativeAssetPattern, `$1${rawBaseUrl}/$2$4`)
-        .replace(markdownRelativeAssetPattern, `$1${rawBaseUrl}/$2$4`);
+        .replace(htmlRelativeAssetPattern, (_match, prefix, target, _extension, suffix) => replaceUrl(packageJson, `./${target}`, `${rawBaseUrl}/${target}`, prefix, suffix))
+        .replace(markdownRelativeAssetPattern, (_match, prefix, target, _extension, suffix) => replaceUrl(packageJson, `./${target}`, `${rawBaseUrl}/${target}`, prefix, suffix))
+        .replace(htmlRelativeDocumentLinkPattern, (_match, prefix, target, _document, suffix) => replaceUrl(packageJson, `./${target}`, `${blobBaseUrl}/${target}`, prefix, suffix))
+        .replace(markdownRelativeDocumentLinkPattern, (_match, leading, prefix, target, _document, suffix) => `${leading}${replaceUrl(packageJson, `./${target}`, `${blobBaseUrl}/${target}`, prefix, suffix)}`);
     if (nextReadme === readme)
         return;
     writeFileSync(readmePath, nextReadme, "utf-8");
-    info$1(`Rewrote README image assets for ${packageJson.name} to ${rawBaseUrl}`);
+    info$1(`Rewrote README image assets and document links for ${packageJson.name}`);
+}
+function replaceUrl(packageJson, from, to, prefix, suffix) {
+    info$1(`Rewriting ${packageJson.name}: ${from} -> ${to}`);
+    return `${prefix}${to}${suffix}`;
 }
 function* findPackageJsonFiles(directory) {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -86855,6 +86865,18 @@ function getRawBaseUrl(packageJson, commit) {
         ? `/${trimSlashes(directory)}`
         : "";
     return `https://raw.githubusercontent.com/${repository.owner}/${repository.name}/${commit}${basePath}`;
+}
+function getBlobBaseUrl(packageJson, commit) {
+    const repository = getRepository(packageJson);
+    if (!repository)
+        return undefined;
+    const directory = typeof packageJson.repository === "object"
+        ? packageJson.repository.directory
+        : undefined;
+    const basePath = directory
+        ? `/${trimSlashes(directory)}`
+        : "";
+    return `https://github.com/${repository.owner}/${repository.name}/blob/${commit}${basePath}`;
 }
 function getRepository(packageJson) {
     const repositoryUrl = typeof packageJson.repository === "string"
