@@ -36,7 +36,17 @@ await run
         //Ids are incremental
         const artifact = response
             .filter(artifact => !artifact.expired)
-            .reduce((previous, current) => previous.id > current.id ? previous : current );
+            .reduce
+            (
+                (previous, current) => 
+                {
+                    if (previous === undefined)
+                        return current;
+
+                    return previous.id > current.id ? previous : current;
+                },
+                 undefined as (typeof response)[0] | undefined
+            );
 
         if (!artifact)
             throw new Error("Could not find any non-expired artifact!");

@@ -34,6 +34,7 @@ jobs:
         target_commitish: ${{ github.event.pull_request.merge_commit_sha }}
 
     - name: publish packages
+      if: ${{ steps.create_release.outputs.id }}
       uses: svs-tm/ci-cd/.github/actions/publish-npm-packages@main
       with:
         paths: ${{ steps.create_release.outputs.packages }}

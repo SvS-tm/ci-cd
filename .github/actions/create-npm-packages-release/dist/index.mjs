@@ -91970,21 +91970,23 @@ await run(z$1.object({
     path: z$1.string()
 }), async (inputs) => {
     const octokit = getOctokit(inputs.token);
-    const packagesToUpdate = [];
+    const packagesToPublish = [];
     for (const tgz of findTgzFiles(inputs.path)) {
         const packageJson = await readPackageJsonFromTgz(tgz);
         info$1(`Creating tag ${packageJson.name}-${packageJson.version} ...`);
         const created = await createTag(octokit, inputs.owner, inputs.repository, inputs.target_commitish, `${packageJson.name}-${packageJson.version}`);
         if (created) {
             info$1(`Tag was created ${packageJson.name}-${packageJson.version}`);
-            packagesToUpdate.push({ ...packageJson, path: tgz });
+            packagesToPublish.push({ ...packageJson, path: tgz });
         }
         else
             warning(`Could not create tag ${packageJson.name}-${packageJson.version} as it was duplicated, skipping this package`);
     }
-    if (!packagesToUpdate.length)
-        throw new Error(`No packages to update`);
-    info$1(`Creating release for ${packagesToUpdate.length} package(s)...`);
+    if (!packagesToPublish.length) {
+        warning(`No packages found to publish, skipping release creation...`);
+        return;
+    }
+    info$1(`Creating release for ${packagesToPublish.length} package(s)...`);
     const createReleaseResponse = await octokit.rest.repos.createRelease({
         owner: inputs.owner,
         repo: inputs.repository,
@@ -92001,7 +92003,7 @@ await run(z$1.object({
     if (!isSuccessStatusCode(createReleaseResponse.status))
         throw new Error("Unexpected API response for release creatinon", { cause: createReleaseResponse });
     info$1(`Release created ${serializeObject(createReleaseResponse.data)}`);
-    for (const packageMeta of packagesToUpdate) {
+    for (const packageMeta of packagesToPublish) {
         info$1(`Uploading release asset ${serializeObject(packageMeta)}`);
         const buffer = await readFile(packageMeta.path);
         const uploadReleaseAssetResponse = await octokit.rest.repos.uploadReleaseAsset({
@@ -92020,7 +92022,7 @@ await run(z$1.object({
         id: String(createReleaseResponse.data.id),
         url: createReleaseResponse.data.url,
         upload_url: createReleaseResponse.data.upload_url,
-        packages: packagesToUpdate.map(({ path }) => path)
+        packages: packagesToPublish.map(({ path }) => path)
     };
 });
 //# sourceMappingURL=index.mjs.map

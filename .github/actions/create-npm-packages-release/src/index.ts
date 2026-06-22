@@ -29,7 +29,7 @@ await run
     {
         const octokit = getOctokit(inputs.token);
 
-        const packagesToUpdate: PackageMetadata[] = []; 
+        const packagesToPublish: PackageMetadata[] = []; 
 
         for (const tgz of findTgzFiles(inputs.path))
         {
@@ -50,16 +50,20 @@ await run
             {
                 info(`Tag was created ${packageJson.name}-${packageJson.version}`);
 
-                packagesToUpdate.push({ ...packageJson, path: tgz });
+                packagesToPublish.push({ ...packageJson, path: tgz });
             }
             else
                 warning(`Could not create tag ${packageJson.name}-${packageJson.version} as it was duplicated, skipping this package`);
         }
 
-        if (!packagesToUpdate.length)
-            throw new Error(`No packages to update`);
+        if (!packagesToPublish.length)
+        {
+            warning(`No packages found to publish, skipping release creation...`);
 
-        info(`Creating release for ${packagesToUpdate.length} package(s)...`);
+            return;
+        }
+
+        info(`Creating release for ${packagesToPublish.length} package(s)...`);
 
         const createReleaseResponse = await octokit.rest.repos.createRelease
         (
@@ -83,7 +87,7 @@ await run
 
         info(`Release created ${serializeObject(createReleaseResponse.data)}`);
 
-        for (const packageMeta of packagesToUpdate)
+        for (const packageMeta of packagesToPublish)
         {
             info(`Uploading release asset ${serializeObject(packageMeta)}`);
 
@@ -111,7 +115,7 @@ await run
             id: String(createReleaseResponse.data.id),
             url: createReleaseResponse.data.url,
             upload_url: createReleaseResponse.data.upload_url,
-            packages: packagesToUpdate.map(({ path }) => path)
+            packages: packagesToPublish.map(({ path }) => path)
         };
     }
 );
