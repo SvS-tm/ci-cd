@@ -13,6 +13,13 @@ jobs:
       id-token: write
       packages: write
     steps:
+
+    - name: setup node
+      uses: actions/setup-node@v6
+      with:
+        node-version: '24'
+        registry-url: https://registry.npmjs.org/
+        package-manager-cache: false
     
     - name: download latest artifact
       uses: svs-tm/ci-cd/.github/actions/download-latest-artifact@main
