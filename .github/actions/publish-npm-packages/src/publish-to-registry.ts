@@ -5,14 +5,17 @@ import { tmpdir } from "os";
 import { join } from "path/posix";
 import { RegistryConfig } from "./registry-config";
 import { getNpmAuthLine } from "./get-npm-auth-line";
+import { readPackageVersionFromTgz } from "./read-package-version-from-tgz";
 
 export async function publishToRegistry(assetPath: string, config: RegistryConfig) 
 {
-    const args = getPublishArgs(assetPath, config);
+    const version = await readPackageVersionFromTgz(assetPath);
+    const tag = config.tag ?? getPrereleaseTag(version);
+    const args = getPublishArgs(assetPath, config, tag);
 
     if (config.mode === "TrustedPublishing")
     {
-        info(`Publishing '${assetPath}' to '${config.registry}' using trusted publishing`);
+        info(`Publishing '${assetPath}' to '${config.registry}' using trusted publishing${tag ? ` with tag '${tag}'` : ""}`);
 
         await exec("npm", args);
 
@@ -37,7 +40,7 @@ export async function publishToRegistry(assetPath: string, config: RegistryConfi
             { encoding: "utf-8" }
         );
 
-        info(`Publishing '${assetPath}' to '${config.registry}'`);
+        info(`Publishing '${assetPath}' to '${config.registry}'${tag ? ` with tag '${tag}'` : ""}`);
 
         await exec("npm", [...args, "--userconfig", npmrcPath]);
     }
@@ -47,7 +50,7 @@ export async function publishToRegistry(assetPath: string, config: RegistryConfi
     }
 }
 
-function getPublishArgs(assetPath: string, config: RegistryConfig)
+function getPublishArgs(assetPath: string, config: RegistryConfig, tag?: string)
 {
     const args = 
     [
@@ -60,11 +63,23 @@ function getPublishArgs(assetPath: string, config: RegistryConfig)
     if (config.access)
         args.push("--access", config.access);
 
-    if (config.tag)
-        args.push("--tag", config.tag);
+    if (tag)
+        args.push("--tag", tag);
 
     if (typeof config.provenance === "boolean")
         args.push(`--provenance=${config.provenance}`);
 
     return args;
+}
+
+function getPrereleaseTag(version: string)
+{
+    const prerelease = version.match(/^[0-9]+\.[0-9]+\.[0-9]+-([0-9A-Za-z-]+)/)?.[1];
+
+    if (!prerelease)
+        return undefined;
+
+    return /^[0-9]+$/.test(prerelease)
+        ? "next"
+        : prerelease;
 }

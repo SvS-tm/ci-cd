@@ -30,9 +30,21 @@ export async function createTag
     {
         if (error.status === 422) 
         {
-            warning(`Tag already exists, skipping: ${tag}`);
+            const existing = await octokit.rest.git.getRef
+            (
+                {
+                    owner,
+                    repo,
+                    ref: `tags/${tag}`
+                }
+            );
 
-            return false;
+            if (existing.data.object.sha !== sha)
+                throw new Error(`Tag '${tag}' already exists at '${existing.data.object.sha}', expected '${sha}'.`);
+
+            warning(`Tag already exists at the expected commit, reusing: ${tag}`);
+
+            return true;
         }
 
         throw error;

@@ -53,7 +53,7 @@ await run
                 packagesToPublish.push({ ...packageJson, path: tgz });
             }
             else
-                warning(`Could not create tag ${packageJson.name}-${packageJson.version} as it was duplicated, skipping this package`);
+                warning(`Could not create tag ${packageJson.name}-${packageJson.version}, skipping this package`);
         }
 
         if (!packagesToPublish.length)
