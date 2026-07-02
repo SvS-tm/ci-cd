@@ -48,7 +48,7 @@ await run
 
             if (created)
             {
-                info(`Tag was created ${packageJson.name}-${packageJson.version}`);
+                info(`Tag is available ${packageJson.name}-${packageJson.version}`);
 
                 packagesToPublish.push({ ...packageJson, path: tgz });
             }

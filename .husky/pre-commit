@@ -1,0 +1,2 @@
+pnpm -r build
+git add -u .github/actions
