@@ -40,7 +40,11 @@ export async function createTag
             );
 
             if (existing.data.object.sha !== sha)
-                throw new Error(`Tag '${tag}' already exists at '${existing.data.object.sha}', expected '${sha}'.`);
+            {
+                warning(`Tag '${tag}' already exists at '${existing.data.object.sha}', expected '${sha}'. Skipping this package.`);
+
+                return false;
+            }
 
             warning(`Tag already exists at the expected commit, reusing: ${tag}`);
 

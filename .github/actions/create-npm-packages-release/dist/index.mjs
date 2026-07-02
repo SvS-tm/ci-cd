@@ -91910,8 +91910,10 @@ async function createTag(octokit, owner, repo, sha, tag) {
                 repo,
                 ref: `tags/${tag}`
             });
-            if (existing.data.object.sha !== sha)
-                throw new Error(`Tag '${tag}' already exists at '${existing.data.object.sha}', expected '${sha}'.`);
+            if (existing.data.object.sha !== sha) {
+                warning(`Tag '${tag}' already exists at '${existing.data.object.sha}', expected '${sha}'. Skipping this package.`);
+                return false;
+            }
             warning(`Tag already exists at the expected commit, reusing: ${tag}`);
             return true;
         }
@@ -91983,7 +91985,7 @@ await run(z$1.object({
         info$1(`Creating tag ${packageJson.name}-${packageJson.version} ...`);
         const created = await createTag(octokit, inputs.owner, inputs.repository, inputs.target_commitish, `${packageJson.name}-${packageJson.version}`);
         if (created) {
-            info$1(`Tag was created ${packageJson.name}-${packageJson.version}`);
+            info$1(`Tag is available ${packageJson.name}-${packageJson.version}`);
             packagesToPublish.push({ ...packageJson, path: tgz });
         }
         else
