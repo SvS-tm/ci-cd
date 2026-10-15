@@ -76541,14 +76541,10 @@ var ZodHelpers;
             .pipe(type);
     }
     ZodHelpers.json = json;
-    function githubInput() {
-        return (value) => {
-            if (typeof value === "string") {
-                if (!value.length)
-                    return undefined;
-            }
-            return value;
-        };
+    // getInput returns an empty string for both omitted and explicitly empty inputs.
+    // Normalize before parsing so optional/default schemas see undefined.
+    function githubInput(type) {
+        return z$2.preprocess(value => value === "" ? undefined : value, type);
     }
     ZodHelpers.githubInput = githubInput;
 })(ZodHelpers || (ZodHelpers = {}));
@@ -94117,11 +94113,11 @@ var z = /*#__PURE__*/Object.freeze({
 });
 
 await run(z.object({
-    owner: z.string(),
-    repository: z.string(),
-    token: z.string(),
-    artifact_name: z.string(),
-    path: z.string().optional().transform(ZodHelpers.githubInput())
+    owner: ZodHelpers.githubInput(z.string().min(1)),
+    repository: ZodHelpers.githubInput(z.string().min(1)),
+    token: ZodHelpers.githubInput(z.string().min(1)),
+    artifact_name: ZodHelpers.githubInput(z.string().min(1)),
+    path: ZodHelpers.githubInput(z.string().optional())
 }), async (inputs) => {
     const octokit = getOctokit(inputs.token);
     const response = await octokit.paginate("GET /repos/{owner}/{repo}/actions/artifacts", {

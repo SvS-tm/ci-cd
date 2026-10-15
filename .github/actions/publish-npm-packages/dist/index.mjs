@@ -43490,14 +43490,10 @@ var ZodHelpers;
             .pipe(type);
     }
     ZodHelpers.json = json;
-    function githubInput() {
-        return (value) => {
-            if (typeof value === "string") {
-                if (!value.length)
-                    return undefined;
-            }
-            return value;
-        };
+    // getInput returns an empty string for both omitted and explicitly empty inputs.
+    // Normalize before parsing so optional/default schemas see undefined.
+    function githubInput(type) {
+        return z$3.preprocess(value => value === "" ? undefined : value, type);
     }
     ZodHelpers.githubInput = githubInput;
 })(ZodHelpers || (ZodHelpers = {}));
@@ -58692,8 +58688,8 @@ var z$1 = /*#__PURE__*/Object.freeze({
 });
 
 const InputsSchema = z$1.object({
-    paths: ZodHelpers.json(z$1.array(z$1.string())
-        .min(1))
+    paths: ZodHelpers.githubInput(ZodHelpers.json(z$1.array(z$1.string().min(1))
+        .min(1)))
 });
 
 // We use any as a valid input type

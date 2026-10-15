@@ -9,20 +9,21 @@ import { formatReleaseDate } from "./format-release-date";
 import { getReleaseBody } from "./get-release-body";
 import { PackageMetadata } from "./package-metadata";
 import { readPackageJsonFromTgz } from "./read-package-json-from-tgz";
+import { getReleaseOptions } from "./get-release-options";
 
 await run
 (
     z.object
     (
         {
-            owner: z.string(),
-            repository: z.coerce.string(),
-            token: z.coerce.string(),
-            target_commitish: z.coerce.string(),
-            draft: z.coerce.boolean().optional().transform(ZodHelpers.githubInput()),
-            prerelease: z.coerce.boolean().optional().transform(ZodHelpers.githubInput()),
-            discussion_category_name: z.coerce.string().optional().transform(ZodHelpers.githubInput()),
-            path: z.string()
+            owner: ZodHelpers.githubInput(z.string().min(1)),
+            repository: ZodHelpers.githubInput(z.string().min(1)),
+            token: ZodHelpers.githubInput(z.string().min(1)),
+            target_commitish: ZodHelpers.githubInput(z.string().min(1)),
+            draft: ZodHelpers.githubInput(z.enum(["true", "false"]).transform(value => value === "true").optional()),
+            prerelease: ZodHelpers.githubInput(z.enum(["true", "false"]).transform(value => value === "true").optional()),
+            discussion_category_name: ZodHelpers.githubInput(z.string().optional()),
+            path: ZodHelpers.githubInput(z.string().min(1))
         }
     ),
     async (inputs) =>
@@ -65,6 +66,8 @@ await run
 
         info(`Creating release for ${packagesToPublish.length} package(s)...`);
 
+        const releaseOptions = getReleaseOptions(packagesToPublish, inputs.prerelease);
+
         const createReleaseResponse = await octokit.rest.repos.createRelease
         (
             {
@@ -77,8 +80,7 @@ await run
                 draft: inputs.draft,
                 discussion_category_name: inputs.discussion_category_name,
                 generate_release_notes: false,
-                make_latest: "true",
-                prerelease: inputs.prerelease
+                ...releaseOptions
             }
         );
 

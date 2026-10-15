@@ -31,17 +31,10 @@ export namespace ZodHelpers
             .pipe(type);
     }
 
-    export function githubInput<T_Value>()
+    // getInput returns an empty string for both omitted and explicitly empty inputs.
+    // Normalize before parsing so optional/default schemas see undefined.
+    export function githubInput<T_Type extends ZodType>(type: T_Type)
     {
-        return (value: T_Value) =>
-        {
-            if (typeof value === "string")
-            {
-                if (!value.length)
-                    return undefined;
-            }
-
-            return value;   
-        };
+        return z.preprocess(value => value === "" ? undefined : value, type);
     }
 }

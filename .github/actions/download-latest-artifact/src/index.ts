@@ -10,11 +10,11 @@ await run
     z.object
     (
         {
-            owner: z.string(),
-            repository: z.string(),
-            token: z.string(),
-            artifact_name: z.string(),
-            path: z.string().optional().transform(ZodHelpers.githubInput())
+            owner: ZodHelpers.githubInput(z.string().min(1)),
+            repository: ZodHelpers.githubInput(z.string().min(1)),
+            token: ZodHelpers.githubInput(z.string().min(1)),
+            artifact_name: ZodHelpers.githubInput(z.string().min(1)),
+            path: ZodHelpers.githubInput(z.string().optional())
         }
     ),
     async (inputs) =>

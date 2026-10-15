@@ -18,8 +18,8 @@ await run
     z.object
     (
         {
-            path: z.string().optional().transform(ZodHelpers.githubInput()),
-            commit: z.string().min(1)
+            path: ZodHelpers.githubInput(z.string().optional()),
+            commit: ZodHelpers.githubInput(z.string().min(1))
         }
     ),
     async (inputs) =>

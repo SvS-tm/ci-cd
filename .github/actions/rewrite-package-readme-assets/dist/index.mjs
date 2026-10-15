@@ -71586,14 +71586,10 @@ var ZodHelpers;
             .pipe(type);
     }
     ZodHelpers.json = json;
-    function githubInput() {
-        return (value) => {
-            if (typeof value === "string") {
-                if (!value.length)
-                    return undefined;
-            }
-            return value;
-        };
+    // getInput returns an empty string for both omitted and explicitly empty inputs.
+    // Normalize before parsing so optional/default schemas see undefined.
+    function githubInput(type) {
+        return z$2.preprocess(value => value === "" ? undefined : value, type);
     }
     ZodHelpers.githubInput = githubInput;
 })(ZodHelpers || (ZodHelpers = {}));
@@ -86796,8 +86792,8 @@ const markdownRelativeAssetPattern = new RegExp(`(!\\[[^\\]]*\\]\\()\\.\\/([^\\)
 const htmlRelativeDocumentLinkPattern = new RegExp(`(href=["'])(${relativePathPrefix}${documentTarget})(["'])`, "gi");
 const markdownRelativeDocumentLinkPattern = new RegExp(`(^|[^!])(\\[[^\\]]+\\]\\()(${relativePathPrefix}${documentTarget})(\\))`, "gim");
 await run(z.object({
-    path: z.string().optional().transform(ZodHelpers.githubInput()),
-    commit: z.string().min(1)
+    path: ZodHelpers.githubInput(z.string().optional()),
+    commit: ZodHelpers.githubInput(z.string().min(1))
 }), async (inputs) => {
     const root = inputs.path
         ? path.resolve(inputs.path)
