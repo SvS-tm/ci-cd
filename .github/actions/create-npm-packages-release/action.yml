@@ -21,7 +21,7 @@ inputs:
     description: Whether to create the release as a draft.
     required: false
   prerelease:
-    description: Whether to mark the release as a pre-release.
+    description: Whether to mark the release as a pre-release. If omitted, detected from package versions (any pre-release package marks the entire release as a pre-release).
     required: false
   discussion_category_name:
     description: Category name for the release discussion thread.

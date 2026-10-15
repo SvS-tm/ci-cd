@@ -76680,14 +76680,10 @@ var ZodHelpers;
             .pipe(type);
     }
     ZodHelpers.json = json;
-    function githubInput() {
-        return (value) => {
-            if (typeof value === "string") {
-                if (!value.length)
-                    return undefined;
-            }
-            return value;
-        };
+    // getInput returns an empty string for both omitted and explicitly empty inputs.
+    // Normalize before parsing so optional/default schemas see undefined.
+    function githubInput(type) {
+        return z$3.preprocess(value => value === "" ? undefined : value, type);
     }
     ZodHelpers.githubInput = githubInput;
 })(ZodHelpers || (ZodHelpers = {}));
@@ -91968,15 +91964,20 @@ async function readPackageJsonFromTgz(tgzPath) {
     return PackageJsonSchema.parse(JSON.parse(packageJsonContent));
 }
 
+function getReleaseOptions(packages, override) {
+    const prerelease = override ?? packages.some(({ version }) => /^[0-9]+\.[0-9]+\.[0-9]+-/.test(version));
+    return { prerelease, make_latest: prerelease ? "false" : "true" };
+}
+
 await run(z$1.object({
-    owner: z$1.string(),
-    repository: z$1.coerce.string(),
-    token: z$1.coerce.string(),
-    target_commitish: z$1.coerce.string(),
-    draft: z$1.coerce.boolean().optional().transform(ZodHelpers.githubInput()),
-    prerelease: z$1.coerce.boolean().optional().transform(ZodHelpers.githubInput()),
-    discussion_category_name: z$1.coerce.string().optional().transform(ZodHelpers.githubInput()),
-    path: z$1.string()
+    owner: ZodHelpers.githubInput(z$1.string().min(1)),
+    repository: ZodHelpers.githubInput(z$1.string().min(1)),
+    token: ZodHelpers.githubInput(z$1.string().min(1)),
+    target_commitish: ZodHelpers.githubInput(z$1.string().min(1)),
+    draft: ZodHelpers.githubInput(z$1.enum(["true", "false"]).transform(value => value === "true").optional()),
+    prerelease: ZodHelpers.githubInput(z$1.enum(["true", "false"]).transform(value => value === "true").optional()),
+    discussion_category_name: ZodHelpers.githubInput(z$1.string().optional()),
+    path: ZodHelpers.githubInput(z$1.string().min(1))
 }), async (inputs) => {
     const octokit = getOctokit(inputs.token);
     const packagesToPublish = [];
@@ -91996,6 +91997,7 @@ await run(z$1.object({
         return;
     }
     info$1(`Creating release for ${packagesToPublish.length} package(s)...`);
+    const releaseOptions = getReleaseOptions(packagesToPublish, inputs.prerelease);
     const createReleaseResponse = await octokit.rest.repos.createRelease({
         owner: inputs.owner,
         repo: inputs.repository,
@@ -92006,8 +92008,7 @@ await run(z$1.object({
         draft: inputs.draft,
         discussion_category_name: inputs.discussion_category_name,
         generate_release_notes: false,
-        make_latest: "true",
-        prerelease: inputs.prerelease
+        ...releaseOptions
     });
     if (!isSuccessStatusCode(createReleaseResponse.status))
         throw new Error("Unexpected API response for release creatinon", { cause: createReleaseResponse });
