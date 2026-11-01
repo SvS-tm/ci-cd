@@ -1,4 +1,4 @@
-export function getNpmAuthLine(registry: string, token: string) 
+export function getNpmAuthLine(registry: string, token: string)
 {
     const url = new URL(registry);
 

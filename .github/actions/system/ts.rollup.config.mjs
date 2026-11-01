@@ -8,17 +8,19 @@ export default defineConfig
     [
         {
             input: "src/index.ts",
-            output: [
+            output:
+            [
                 { file: "dist/index.mjs", format: "esm", sourcemap: true }
             ],
             context: "globalThis",
-            plugins: [
+            plugins:
+            [
                 nodeResolve({ preferBuiltins: true }),
                 commonjs(),
                 typescript({ outputToFilesystem: true })
             ],
             external: [],
-            onwarn(warning, warn) 
+            onwarn(warning, warn)
             {
                 if (warning.code === "CIRCULAR_DEPENDENCY")
                     return;

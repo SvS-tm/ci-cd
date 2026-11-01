@@ -1,7 +1,7 @@
 import * as tar from "tar";
 import { PackageJsonSchema } from "./package-json-schema";
 
-export async function readPackageJsonFromTgz(tgzPath: string) 
+export async function readPackageJsonFromTgz(tgzPath: string)
 {
     let packageJsonContent: string | undefined;
 
@@ -9,18 +9,18 @@ export async function readPackageJsonFromTgz(tgzPath: string)
     (
         {
             file: tgzPath,
-            onentry: (entry) => 
+            onentry: (entry) =>
             {
                 // npm tarballs usually contain package/package.json,
                 // but this also supports package.json at any nested level.
                 const normalizedPath = entry.path.replace(/\\/g, "/");
 
-                if 
+                if
                 (
                     normalizedPath === "package/package.json"
                         ||
                     normalizedPath.endsWith("/package.json")
-                ) 
+                )
                 {
                     const chunks: Buffer[] = [];
 

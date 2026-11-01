@@ -7,7 +7,7 @@ import z from "zod";
 import { createTag } from "./create-tag";
 import { formatReleaseDate } from "./format-release-date";
 import { getReleaseBody } from "./get-release-body";
-import { PackageMetadata } from "./package-metadata";
+import type { PackageMetadata } from "./package-metadata";
 import { readPackageJsonFromTgz } from "./read-package-json-from-tgz";
 import { getReleaseOptions } from "./get-release-options";
 
@@ -30,7 +30,7 @@ await run
     {
         const octokit = getOctokit(inputs.token);
 
-        const packagesToPublish: PackageMetadata[] = []; 
+        const packagesToPublish: PackageMetadata[] = [];
 
         for (const tgz of findTgzFiles(inputs.path))
         {
@@ -40,9 +40,9 @@ await run
 
             const created = await createTag
             (
-                octokit, 
-                inputs.owner, 
-                inputs.repository, 
+                octokit,
+                inputs.owner,
+                inputs.repository,
                 inputs.target_commitish,
                 `${packageJson.name}-${packageJson.version}`,
             );
@@ -112,7 +112,7 @@ await run
 
             info(`Asset uploaded ${serializeObject(uploadReleaseAssetResponse.data)}`);
         }
-        
+
         return {
             id: String(createReleaseResponse.data.id),
             url: createReleaseResponse.data.url,

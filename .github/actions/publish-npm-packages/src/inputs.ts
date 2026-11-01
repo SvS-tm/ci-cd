@@ -12,5 +12,4 @@ export const InputsSchema = z.object
     }
 );
 
-
 export type Inputs = z.infer<typeof InputsSchema>;

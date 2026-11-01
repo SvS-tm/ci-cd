@@ -1,0 +1,14 @@
+{
+    "extends": "./.github/actions/system/tsconfig.json",
+    "compilerOptions":
+    {
+        "rootDir": ".",
+        "declaration": false,
+        "paths":
+        {
+            "@svs-tm/github-actions.system": ["./.github/actions/system/src/index.ts"]
+        }
+    },
+    "include": [".github/actions/*/src/**/*.ts"],
+    "exclude": ["**/dist", "**/node_modules"]
+}

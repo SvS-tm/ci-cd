@@ -1,0 +1,4 @@
+# Rollup emits LF; keep generated bundles consistent across platforms.
+.github/actions/**/dist/* text eol=lf
+.gitattributes text eol=lf
+pnpm-lock.yaml text eol=lf

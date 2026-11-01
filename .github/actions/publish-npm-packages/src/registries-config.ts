@@ -9,4 +9,3 @@ export const RegistriesConfigSchema = ZodHelpers.json
 );
 
 export type RegistryConfig = z.infer<typeof RegistriesConfigSchema>;
- 

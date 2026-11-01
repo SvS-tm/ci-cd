@@ -1,5 +1,6 @@
 {
-    "compilerOptions": {
+    "compilerOptions":
+    {
         "importHelpers": true,
         "target": "ESNext",
         "module": "ESNext",
@@ -23,15 +24,8 @@
         "exactOptionalPropertyTypes": false,
         "useDefineForClassFields": true,
         "resolveJsonModule": true,
-        "types": [
-            "node"
-        ]
+        "types": ["node"]
     },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "dist",
-        "node_modules"
-    ]
+    "include": ["src/**/*"],
+    "exclude": ["dist", "node_modules"]
 }

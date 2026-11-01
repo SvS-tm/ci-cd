@@ -1,4 +1,4 @@
-on: 
+on:
     workflow_call:
         secrets:
             NPM_REGISTRIES_CONFIG:
@@ -14,13 +14,16 @@ jobs:
       packages: write
     steps:
 
-    - name: setup node
-      uses: actions/setup-node@v6
+    - name: checkout
+      uses: actions/checkout@v7
       with:
-        node-version: '24'
-        registry-url: https://registry.npmjs.org/
-        package-manager-cache: false
-    
+        persist-credentials: false
+
+    - name: setup pnpm and runtimes
+      uses: pnpm/setup@v3
+      with:
+        install: false
+
     - name: download latest artifact
       uses: svs-tm/ci-cd/.github/actions/download-latest-artifact@main
       with:
