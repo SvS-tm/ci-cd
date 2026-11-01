@@ -20,10 +20,10 @@ await run
     async (inputs) =>
     {
         const octokit = getOctokit(inputs.token);
-        
+
         const response = await octokit.paginate
         (
-            "GET /repos/{owner}/{repo}/actions/artifacts", 
+            "GET /repos/{owner}/{repo}/actions/artifacts",
             {
                 repo: inputs.repository,
                 owner: inputs.owner,
@@ -38,7 +38,7 @@ await run
             .filter(artifact => !artifact.expired)
             .reduce
             (
-                (previous, current) => 
+                (previous, current) =>
                 {
                     if (previous === undefined)
                         return current;
@@ -67,7 +67,7 @@ await run
         {
             throw new Error
             (
-                "Unexpected response for artifact download", 
+                "Unexpected response for artifact download",
                 { cause: { status: downloadResponse } }
             );
         }
@@ -81,7 +81,7 @@ await run
             (resolve, reject) =>
             {
                 const buffer = Buffer.from(downloadResponse.data as ArrayBuffer);
-                
+
                 Readable.from(buffer)
                     .pipe(Extract({ path }))
                     .on('close', () => resolve())

@@ -1,6 +1,6 @@
 import { info } from "@actions/core";
 import { run, ZodHelpers } from "@svs-tm/github-actions.system";
-import { Dirent, readdirSync, readFileSync, writeFileSync } from "fs";
+import { type Dirent, readdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 import z from "zod";
 
@@ -224,10 +224,16 @@ function trimSlashes(value: string)
     return value.replace(/^\/+|\/+$/g, "");
 }
 
-type PackageJson = {
+type PackageJson =
+{
     name?: string;
-    repository?: string | {
-        url?: string;
-        directory?: string;
-    };
+    repository?:
+    (
+        string
+            |
+        {
+            url?: string;
+            directory?: string;
+        }
+    );
 };

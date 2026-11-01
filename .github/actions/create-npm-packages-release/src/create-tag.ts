@@ -1,5 +1,5 @@
 import { info, warning } from "@actions/core";
-import { getOctokit } from "@actions/github";
+import type { getOctokit } from "@actions/github";
 
 export async function createTag
 (
@@ -8,9 +8,9 @@ export async function createTag
     repo: string,
     sha: string,
     tag: string
-) 
+)
 {
-    try 
+    try
     {
         await octokit.rest.git.createRef
         (
@@ -26,9 +26,9 @@ export async function createTag
 
         return true;
     }
-    catch (error: any) 
+    catch (error: any)
     {
-        if (error.status === 422) 
+        if (error.status === 422)
         {
             const existing = await octokit.rest.git.getRef
             (

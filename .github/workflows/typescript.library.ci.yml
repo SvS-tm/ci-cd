@@ -1,5 +1,5 @@
 on: workflow_call
-jobs:     
+jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
@@ -35,7 +35,7 @@ jobs:
       if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'release') }}
       run: |
         pnpm -r pack
-  
+
     - name: publish artifact
       if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'release') }}
       uses: actions/upload-artifact@v5

@@ -1,7 +1,6 @@
-const pad = (value: any) => 
-    String(value).padStart(2, "0");
+const pad = (value: any) => String(value).padStart(2, "0");
 
-export function formatReleaseDate(date = new Date()) 
+export function formatReleaseDate(date = new Date())
 {
     const year = date.getUTCFullYear();
     const month = pad(date.getUTCMonth() + 1);

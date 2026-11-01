@@ -1,10 +1,10 @@
 import { error, getInput, info, setFailed, setOutput } from "@actions/core";
-import z, { ZodType } from "zod";
+import z, { type ZodType } from "zod";
 import { serializeObject } from "./serialization";
 
 const inputs = new Proxy
 (
-    {} as object, 
+    {} as object,
     {
         get(_target, key)
         {
@@ -13,7 +13,7 @@ const inputs = new Proxy
 
             return getInput(key);
         },
-        has(_target, key) 
+        has(_target, key)
         {
             if (typeof key === "symbol")
                 return false;
@@ -28,13 +28,12 @@ function getInputs<T_Type extends ZodType>(type: T_Type)
     return type.parse(inputs);
 }
 
-
 function setOutputs<T_Outputs>(parameters: T_Outputs)
 {
     for (const key in parameters)
     {
         info(`Setting output ${key}`);
-        
+
         setOutput(key, parameters[key]);
     }
 }
@@ -58,12 +57,12 @@ export async function run
         if (outputs)
             setOutputs(outputs);
     }
-    catch (exc)
+    catch (exception)
     {
-        const content = serializeObject(exc);
+        const content = serializeObject(exception);
 
         error(content);
-        
+
         setFailed(content);
     }
 }

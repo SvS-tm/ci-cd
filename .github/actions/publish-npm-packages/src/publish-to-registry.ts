@@ -3,11 +3,11 @@ import { exec } from "@actions/exec";
 import { mkdtemp, writeFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path/posix";
-import { RegistryConfig } from "./registry-config";
+import type { RegistryConfig } from "./registry-config";
 import { getNpmAuthLine } from "./get-npm-auth-line";
 import { readPackageVersionFromTgz } from "./read-package-version-from-tgz";
 
-export async function publishToRegistry(assetPath: string, config: RegistryConfig) 
+export async function publishToRegistry(assetPath: string, config: RegistryConfig)
 {
     const version = await readPackageVersionFromTgz(assetPath);
     const tag = config.tag ?? getPrereleaseTag(version);
@@ -25,7 +25,7 @@ export async function publishToRegistry(assetPath: string, config: RegistryConfi
     const tempDir = await mkdtemp(join(tmpdir(), "npm-publish-"));
     const npmrcPath = join(tempDir, ".npmrc");
 
-    try 
+    try
     {
         await writeFile
         (
@@ -44,7 +44,7 @@ export async function publishToRegistry(assetPath: string, config: RegistryConfi
 
         await exec("npm", [...args, "--userconfig", npmrcPath]);
     }
-    finally 
+    finally
     {
         await rm(tempDir, { recursive: true, force: true });
     }
@@ -52,7 +52,7 @@ export async function publishToRegistry(assetPath: string, config: RegistryConfi
 
 function getPublishArgs(assetPath: string, config: RegistryConfig, tag?: string)
 {
-    const args = 
+    const args =
     [
         "publish",
         assetPath,

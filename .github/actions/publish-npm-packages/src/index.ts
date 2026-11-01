@@ -18,7 +18,7 @@ await run
             {
                 if (config.mode === "AuthToken")
                     setSecret(config.token);
-                
+
                 await publishToRegistry(path, config);
             }
         }

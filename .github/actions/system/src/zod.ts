@@ -1,4 +1,4 @@
-import z, { ZodType } from "zod";
+import z, { type ZodType } from "zod";
 
 export namespace ZodHelpers
 {
@@ -8,15 +8,15 @@ export namespace ZodHelpers
             .string()
             .transform
             (
-                (value, ctx) => 
+                (value, context) =>
                 {
-                    try 
+                    try
                     {
                         return JSON.parse(value);
-                    } 
-                    catch 
+                    }
+                    catch
                     {
-                        ctx.addIssue
+                        context.addIssue
                         (
                             {
                                 code: "custom",

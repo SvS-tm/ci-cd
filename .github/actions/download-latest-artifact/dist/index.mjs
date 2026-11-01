@@ -61321,8 +61321,8 @@ async function run(inputsType, action) {
         if (outputs)
             setOutputs(outputs);
     }
-    catch (exc) {
-        const content = serializeObject(exc);
+    catch (exception) {
+        const content = serializeObject(exception);
         error$O(content);
         setFailed(content);
     }
@@ -76526,12 +76526,12 @@ var ZodHelpers;
     function json(type) {
         return z$2
             .string()
-            .transform((value, ctx) => {
+            .transform((value, context) => {
             try {
                 return JSON.parse(value);
             }
             catch {
-                ctx.addIssue({
+                context.addIssue({
                     code: "custom",
                     message: "Expected a JSON array string"
                 });
