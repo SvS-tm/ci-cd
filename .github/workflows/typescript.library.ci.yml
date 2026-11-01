@@ -5,16 +5,17 @@ jobs:
     steps:
 
     - name: checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
-    - name: setup
-      run: |
-        corepack enable
-        corepack prepare --activate
+    - name: setup pnpm and runtimes
+      uses: pnpm/setup@v3
+      with:
+        install: false
+        cache: true
 
     - name: restore
       run: |
-        pnpm i --frozen-lockfile
+        pnpm install --frozen-lockfile
 
     - name: build
       run: |
@@ -38,7 +39,7 @@ jobs:
 
     - name: publish artifact
       if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'release') }}
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ github.event.pull_request.id }}
         path: |
