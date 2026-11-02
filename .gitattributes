@@ -2,3 +2,6 @@
 .github/actions/**/dist/* text eol=lf
 .gitattributes text eol=lf
 pnpm-lock.yaml text eol=lf
+
+# Include handwritten action sources in GitHub language detection.
+.github/actions/**/src/**/*.ts linguist-detectable=true linguist-vendored=false linguist-generated=false
