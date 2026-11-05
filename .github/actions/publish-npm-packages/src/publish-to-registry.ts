@@ -2,7 +2,7 @@ import { info } from "@actions/core";
 import { exec } from "@actions/exec";
 import { mkdtemp, writeFile, rm } from "fs/promises";
 import { tmpdir } from "os";
-import { join } from "path/posix";
+import { join, resolve } from "path";
 import type { RegistryConfig } from "./registry-config";
 import { getNpmAuthLine } from "./get-npm-auth-line";
 import { readPackageVersionFromTgz } from "./read-package-version-from-tgz";
@@ -11,22 +11,24 @@ export async function publishToRegistry(assetPath: string, config: RegistryConfi
 {
     const version = await readPackageVersionFromTgz(assetPath);
     const tag = config.tag ?? getPrereleaseTag(version);
-    const args = getPublishArgs(assetPath, config, tag);
-
-    if (config.mode === "TrustedPublishing")
-    {
-        info(`Publishing '${assetPath}' to '${config.registry}' using trusted publishing${tag ? ` with tag '${tag}'` : ""}`);
-
-        await exec("npm", args);
-
-        return;
-    }
+    const args = getPublishArgs(resolve(assetPath), config, tag);
 
     const tempDir = await mkdtemp(join(tmpdir(), "npm-publish-"));
-    const npmrcPath = join(tempDir, ".npmrc");
 
     try
     {
+        // npm checks devEngines in its working project, even when publishing a tarball.
+        if (config.mode === "TrustedPublishing")
+        {
+            info(`Publishing '${assetPath}' to '${config.registry}' using trusted publishing${tag ? ` with tag '${tag}'` : ""}`);
+
+            await exec("npm", args, { cwd: tempDir });
+
+            return;
+        }
+
+        const npmrcPath = join(tempDir, ".npmrc");
+
         await writeFile
         (
             npmrcPath,
@@ -42,7 +44,7 @@ export async function publishToRegistry(assetPath: string, config: RegistryConfi
 
         info(`Publishing '${assetPath}' to '${config.registry}'${tag ? ` with tag '${tag}'` : ""}`);
 
-        await exec("npm", [...args, "--userconfig", npmrcPath]);
+        await exec("npm", [...args, "--userconfig", npmrcPath], { cwd: tempDir });
     }
     finally
     {

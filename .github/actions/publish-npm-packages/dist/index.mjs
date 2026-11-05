@@ -4,7 +4,7 @@ import * as crypto from 'crypto';
 import * as I from 'fs';
 import I__default, { promises } from 'fs';
 import * as path from 'path';
-import path__default, { parse as parse$3, dirname } from 'path';
+import path__default, { parse as parse$3, dirname, resolve, join as join$1 } from 'path';
 import http from 'http';
 import https from 'https';
 import 'net';
@@ -35,7 +35,6 @@ import require$$5$3 from 'string_decoder';
 import * as child from 'child_process';
 import { setTimeout as setTimeout$1 } from 'timers';
 import { mkdtemp, writeFile as writeFile$2, rm as rm$2 } from 'fs/promises';
-import { join as join$1 } from 'path/posix';
 import { StringDecoder } from 'node:string_decoder';
 import R, { win32, posix, basename, join } from 'node:path';
 import u from 'node:fs';
@@ -68994,15 +68993,16 @@ async function readPackageVersionFromTgz(tgzPath) {
 async function publishToRegistry(assetPath, config) {
     const version = await readPackageVersionFromTgz(assetPath);
     const tag = config.tag ?? getPrereleaseTag(version);
-    const args = getPublishArgs(assetPath, config, tag);
-    if (config.mode === "TrustedPublishing") {
-        info(`Publishing '${assetPath}' to '${config.registry}' using trusted publishing${tag ? ` with tag '${tag}'` : ""}`);
-        await exec("npm", args);
-        return;
-    }
+    const args = getPublishArgs(resolve(assetPath), config, tag);
     const tempDir = await mkdtemp(join$1(tmpdir(), "npm-publish-"));
-    const npmrcPath = join$1(tempDir, ".npmrc");
     try {
+        // npm checks devEngines in its working project, even when publishing a tarball.
+        if (config.mode === "TrustedPublishing") {
+            info(`Publishing '${assetPath}' to '${config.registry}' using trusted publishing${tag ? ` with tag '${tag}'` : ""}`);
+            await exec("npm", args, { cwd: tempDir });
+            return;
+        }
+        const npmrcPath = join$1(tempDir, ".npmrc");
         await writeFile$2(npmrcPath, [
             `registry=${config.registry}`,
             getNpmAuthLine(config.registry, config.token),
@@ -69011,7 +69011,7 @@ async function publishToRegistry(assetPath, config) {
         ]
             .join("\n"), { encoding: "utf-8" });
         info(`Publishing '${assetPath}' to '${config.registry}'${tag ? ` with tag '${tag}'` : ""}`);
-        await exec("npm", [...args, "--userconfig", npmrcPath]);
+        await exec("npm", [...args, "--userconfig", npmrcPath], { cwd: tempDir });
     }
     finally {
         await rm$2(tempDir, { recursive: true, force: true });
