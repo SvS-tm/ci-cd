@@ -33,6 +33,17 @@ jobs:
         artifact_name: ${{ github.event.pull_request.id }}
         path: ${{ github.workspace }}
 
+    - name: setup Node.js for npm trusted publishing
+      uses: actions/setup-node@v7
+      with:
+        node-version: '24'
+        package-manager-cache: false
+
+    - name: show publishing tool versions
+      run: |
+        node --version
+        npm --version
+
     - name: create release
       id: create_release
       uses: svs-tm/ci-cd/.github/actions/create-npm-packages-release@main
